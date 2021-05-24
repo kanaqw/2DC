@@ -1,4 +1,5 @@
 #include <SDL.h>
+#include <SDL_image.h>
 #include <stdio.h>
 #include <string>
 
@@ -32,8 +33,11 @@ SDL_Surface* gScreenSurface = NULL;
 SDL_Surface* gKeyPressSurfaces[KEY_PRESS_SURFACE_TOTAL];
 //current displayed image
 SDL_Surface* gCurrentSurface = NULL;
+//Current displayed PNG image
+SDL_Surface* gPNGSurface = NULL;
 //The image we will load and show on screen
 SDL_Surface* gNavImage = NULL;
+SDL_Surface* gStretchedSurface = NULL;
 
 bool init() {
 	//init flag
@@ -52,8 +56,15 @@ bool init() {
 			success = false;
 		}
 		else {
-			//Get window surface
-			gScreenSurface = SDL_GetWindowSurface(gWindow);
+			//initialize png loading
+			int imgFlags = IMG_INIT_PNG;
+			if (!(IMG_Init(imgFlags) & imgFlags)) {
+				printf("SDL_image could not initialize! SDL_image Error:%s\n", IMG_GetError());
+			}
+			else {
+				//Get window surface
+				gScreenSurface = SDL_GetWindowSurface(gWindow);
+			}
 		}
 	}
 	return success;
@@ -64,11 +75,12 @@ bool loadMedia() {
 	bool success = true;
 
 	//load splash image
-	gNavImage = SDL_LoadBMP("NavMain.bmp");
-	if (gNavImage == NULL) {
-		printf("Unabel to load image %s! SDL Error: %s\n", "NavMain.bmp", SDL_GetError());
+	gPNGSurface = loadSurface("NavMain.png");
+	if (gPNGSurface == NULL) {
+		printf("Failed to load PNG image\n");
 		success = false;
 	}
+
 	//Load default surface
 	gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAULT] = loadSurface("ButPress.bmp");
 	if (gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAULT] == NULL) {
@@ -109,24 +121,36 @@ void close() {
 		gKeyPressSurfaces[i] = NULL;
 	}
 
-	SDL_FreeSurface(gNavImage);
-	gNavImage = NULL;
+	SDL_FreeSurface(gPNGSurface);
+	gPNGSurface = NULL;
 
 	//Destroy window
 	SDL_DestroyWindow(gWindow);
 	gWindow = NULL;
 
 	//Quit SDL subsystems
+	IMG_Quit();
 	SDL_Quit();
 }
 
 SDL_Surface* loadSurface(std::string path) {
+	//The final optimized image
+	SDL_Surface* optimizedSurface = NULL;
 	//Load image at specified path
-	SDL_Surface* loadedSurface = SDL_LoadBMP(path.c_str());
+	SDL_Surface* loadedSurface = IMG_Load(path.c_str());
 	if (loadedSurface == NULL) {
-		printf("Unable to load image %s! SDL Error: %s\n", path.c_str(), SDL_GetError());
+		printf("Unable to load image %s! SDL Error: %s\n", path.c_str(), IMG_GetError());
 	}
-	return loadedSurface;
+	else {
+		//Convert surface to screen format
+		optimizedSurface = SDL_ConvertSurface(loadedSurface, gScreenSurface->format, 0);
+		if (optimizedSurface == NULL) {
+			printf("Unable to optimize image %s! SDL Error: %s\n", path.c_str(), SDL_GetError());
+		}
+		//Get rid of old loaded surface
+		SDL_FreeSurface(loadedSurface);
+	}
+	return optimizedSurface;
 }
 
 int main(int argc, char* args[]) {
@@ -156,6 +180,7 @@ int main(int argc, char* args[]) {
 						quit = true;
 
 					}
+				
 					else if (e.type == SDL_KEYDOWN) {
 						switch (e.key.keysym.sym) {
 						case SDLK_UP:
@@ -176,9 +201,15 @@ int main(int argc, char* args[]) {
 							break;
 						}
 					}
+					SDL_Rect stretchRect;
+					stretchRect.x = 0;
+					stretchRect.y = 0;
+					stretchRect.w = SCREEN_WIDTH;
+					stretchRect.h = SCREEN_HEIGHT;
+					SDL_BlitScaled(gStretchedSurface, NULL, gScreenSurface, &stretchRect);
 				}
 				//apply the image
-				SDL_BlitSurface(gCurrentSurface, NULL, gScreenSurface, NULL);
+				SDL_BlitSurface(gPNGSurface, NULL, gScreenSurface, NULL);
 				//Update the surface
 				SDL_UpdateWindowSurface(gWindow);
 			}
