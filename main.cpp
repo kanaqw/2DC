@@ -207,13 +207,13 @@ bool loadMedia() {
 	 }
 	 else { gSeederIcon = loadTexture("SeederIconTexture.png");
 
-		 gSpriteClips[0].x = 4; gSpriteClips[0].y = 4; gSpriteClips[0].w = 137; gSpriteClips[0].h = 95;
+		 gSpriteClips[0].x = 4; gSpriteClips[0].y = 0; gSpriteClips[0].w = 134; gSpriteClips[0].h = 97;
 
-		 gSpriteClips[1].x = 4; gSpriteClips[1].y = 109; gSpriteClips[1].w = 137; gSpriteClips[1].h = 95;
+		 gSpriteClips[1].x = 4; gSpriteClips[1].y = 105; gSpriteClips[1].w = 134; gSpriteClips[1].h = 97;
 
-		 gSpriteClips[2].x = 4; gSpriteClips[2].y = 214; gSpriteClips[2].w = 137; gSpriteClips[2].h = 95;
+		 gSpriteClips[2].x = 4; gSpriteClips[2].y = 210; gSpriteClips[2].w = 134; gSpriteClips[2].h = 97;
 
-		 gSpriteClips[3].x = 4; gSpriteClips[3].y = 319; gSpriteClips[3].w = 137; gSpriteClips[3].h = 95;
+		 gSpriteClips[3].x = 4; gSpriteClips[3].y = 315; gSpriteClips[3].w = 134; gSpriteClips[3].h = 97;
 	 }
 		//map
 		gMapLeft = loadTexture("mapLeft.png");
