@@ -50,7 +50,7 @@ bool init();
 bool loadMedia();
 //Frees media and shuts down SDL
 void close();
-
+/////////////////////////////////////////////GLOBAL VARIABLES///////////////////////////////////////////////////
 //Loads individual texture as image
 SDL_Texture* loadTexture(std::string path);
 SDL_Surface* loadSurface(std::string path);
@@ -70,7 +70,7 @@ SDL_Texture* gKeyPressSurfaces[KEY_PRESS_SURFACE_TOTAL];
 const int WALKING_ANIMATION_FRAMES = 4;
 SDL_Rect gSpriteClips[WALKING_ANIMATION_FRAMES];
 LTexture gSpriteSheetTexture;
-
+///////////////////////////////////////////////END OF GV//////////////////////////////////////////////////////////
 LTexture::LTexture() {
 	//Initialize
 	mTexture = NULL;
@@ -123,9 +123,9 @@ void LTexture::setColor(Uint8 red, Uint8 green, Uint8 blue) {
 	SDL_SetTextureColorMod(mTexture, red, green, blue);
 }
 
-void LTexture::setBlendMode( SDL_BlendMode blending ){
+void LTexture::setBlendMode(SDL_BlendMode blending) {
 	//Set blending function
-	SDL_SetTextureBlendMode( mTexture, blending );
+	SDL_SetTextureBlendMode(mTexture, blending);
 }
 
 void LTexture::setAlpha(Uint8 alpha) {
@@ -171,7 +171,7 @@ bool init() {
 		}
 		else {
 			//initialize png loading
-			gRenderer = SDL_CreateRenderer(gWindow, -1, SDL_RENDERER_ACCELERATED);
+			gRenderer = SDL_CreateRenderer(gWindow, -1, SDL_RENDERER_ACCELERATED| SDL_RENDERER_PRESENTVSYNC);
 			if (gRenderer == NULL) {
 				printf("Renderer could not be created! SDL Error %s\n", SDL_GetError());
 				success = false;
@@ -201,73 +201,66 @@ bool loadMedia() {
 		success = false;
 	}
 	//Load sprite animation texture
-	 if (!gSpriteSheetTexture.loadFromFile("SeederIconTexture.png")) {
+	if (!gSpriteSheetTexture.loadFromFile("SeederIconTexture.png")) {
 		printf("Failed to load move animation texture!\n");
-			success = false;
-	 }
-	 else { gSeederIcon = loadTexture("SeederIconTexture.png");
+		success = false;
+	}
+	else {
+		gSpriteClips[0].x = 4; gSpriteClips[0].y = 0; gSpriteClips[0].w = 134; gSpriteClips[0].h = 99;
 
-		 gSpriteClips[0].x = 4; gSpriteClips[0].y = 0; gSpriteClips[0].w = 134; gSpriteClips[0].h = 97;
+		gSpriteClips[1].x = 4; gSpriteClips[1].y = 105; gSpriteClips[1].w = 134; gSpriteClips[1].h = 99;
 
-		 gSpriteClips[1].x = 4; gSpriteClips[1].y = 105; gSpriteClips[1].w = 134; gSpriteClips[1].h = 97;
+		gSpriteClips[2].x = 4; gSpriteClips[2].y = 210; gSpriteClips[2].w = 134; gSpriteClips[2].h = 99;
 
-		 gSpriteClips[2].x = 4; gSpriteClips[2].y = 210; gSpriteClips[2].w = 134; gSpriteClips[2].h = 97;
+		gSpriteClips[3].x = 4; gSpriteClips[3].y = 315; gSpriteClips[3].w = 134; gSpriteClips[3].h = 99;
+	}
+	//map
+	gMapLeft = loadTexture("mapLeft.png");
+	if (gMapLeft == NULL) {
+		printf("Failed to load map texture!\n");
+		success = false;
+	}
 
-		 gSpriteClips[3].x = 4; gSpriteClips[3].y = 315; gSpriteClips[3].w = 134; gSpriteClips[3].h = 97;
-	 }
-		//map
-		gMapLeft = loadTexture("mapLeft.png");
-		if (gMapLeft == NULL) {
-			printf("Failed to load map texture!\n");
-			success = false;
-		}
-		//SeederIcon
-		/*gSeederIcon = loadTexture("SeederIcon2.png");
-		if (gSeederIcon == NULL) {
-			printf("Failed to load SedIcon texture!\n");
-			success = false;
-		}*/
+	//Load default surface
+	gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAULT] = loadTexture("ButPress.bmp");
+	if (gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAULT] == NULL)
+	{
+		printf("Failed to load default image!\n");
+		success = false;
+	}
 
-		//Load default surface
-		gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAULT] = loadTexture("ButPress.bmp");
-		if (gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAULT] == NULL)
-		{
-			printf("Failed to load default image!\n");
-			success = false;
-		}
+	//Load up surface
+	gKeyPressSurfaces[KEY_PRESS_SURFACE_UP] = loadTexture("SeederIconTexture.png");
+	if (gKeyPressSurfaces[KEY_PRESS_SURFACE_UP] == NULL)
+	{
+		printf("Failed to load up image!\n");
+		success = false;
+	}
 
-		//Load up surface
-		gKeyPressSurfaces[KEY_PRESS_SURFACE_UP] = loadTexture("Up.bmp");
-		if (gKeyPressSurfaces[KEY_PRESS_SURFACE_UP] == NULL)
-		{
-			printf("Failed to load up image!\n");
-			success = false;
-		}
+	//Load down surface
+	gKeyPressSurfaces[KEY_PRESS_SURFACE_DOWN] = loadTexture("Down.bmp");
+	if (gKeyPressSurfaces[KEY_PRESS_SURFACE_DOWN] == NULL)
+	{
+		printf("Failed to load down image!\n");
+		success = false;
+	}
 
-		//Load down surface
-		gKeyPressSurfaces[KEY_PRESS_SURFACE_DOWN] = loadTexture("Down.bmp");
-		if (gKeyPressSurfaces[KEY_PRESS_SURFACE_DOWN] == NULL)
-		{
-			printf("Failed to load down image!\n");
-			success = false;
-		}
+	//Load left surface
+	gKeyPressSurfaces[KEY_PRESS_SURFACE_LEFT] = loadTexture("Left.bmp");
+	if (gKeyPressSurfaces[KEY_PRESS_SURFACE_LEFT] == NULL)
+	{
+		printf("Failed to load left image!\n");
+		success = false;
+	}
 
-		//Load left surface
-		gKeyPressSurfaces[KEY_PRESS_SURFACE_LEFT] = loadTexture("Left.bmp");
-		if (gKeyPressSurfaces[KEY_PRESS_SURFACE_LEFT] == NULL)
-		{
-			printf("Failed to load left image!\n");
-			success = false;
-		}
+	//Load right surface
+	gKeyPressSurfaces[KEY_PRESS_SURFACE_RIGHT] = loadTexture("Right.bmp");
+	if (gKeyPressSurfaces[KEY_PRESS_SURFACE_RIGHT] == NULL)
+	{
+		printf("Failed to load right image!\n");
+		success = false;
+	}
 
-		//Load right surface
-		gKeyPressSurfaces[KEY_PRESS_SURFACE_RIGHT] = loadTexture("Right.bmp");
-		if (gKeyPressSurfaces[KEY_PRESS_SURFACE_RIGHT] == NULL)
-		{
-			printf("Failed to load right image!\n");
-			success = false;
-		}
-	
 	return success;
 }
 
@@ -326,9 +319,7 @@ int main(int argc, char* args[]) {
 	if (!init()) {
 		printf("Failed to initialize!\n");
 	}
-	else {
-		//Load media
-		if (!loadMedia()) {
+	else if (!loadMedia()) {
 			printf("Failed to load media!\n");
 		}
 		else {
@@ -338,7 +329,7 @@ int main(int argc, char* args[]) {
 			SDL_Event e;
 			int frame = 0;
 			gKeys = gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAULT];
-			
+
 			//while app still running
 			while (!quit) {
 
@@ -349,93 +340,78 @@ int main(int argc, char* args[]) {
 						quit = true;
 
 					}
-					else if (e.type == SDL_KEYDOWN) {
-						switch (e.key.keysym.sym) {
-						case SDLK_UP:
-							
+
+						//Clear screen
+						SDL_RenderClear(gRenderer);
+						//Render texture to screen
+						SDL_RenderCopy(gRenderer, gTexture, NULL, NULL);
+						//Update screen
+
+						/////////////////////////////BACKGROUND//////////////////////////////////////////
+
+						///////////////////////////////SEED MAP///////////////////////////////////////////
+						SDL_Rect LeftViewer;
+						LeftViewer.x = 7;
+						LeftViewer.y = 5;
+						LeftViewer.w = 517;
+						LeftViewer.h = 387;
+						SDL_RenderSetViewport(gRenderer, &LeftViewer);
+
+						//Render texture to screen
+						SDL_RenderCopy(gRenderer, gMapLeft, NULL, NULL);
+						///////////////////////////RENDERED SHAPES//////////////////////////////////////
+				
+
+						//Draw blue line
+						SDL_SetRenderDrawColor(gRenderer, 0x00, 0x00, 0xFF, 0xFF);
+						SDL_RenderDrawLine(gRenderer, 0, 199, 524, 199);
+						SDL_RenderDrawLine(gRenderer, 265.5, 0, 265.5, 392);
+
+						//vertical yellow dot line
+						SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
+
+						SDL_Rect BackViewer;
+						BackViewer.x = 0;
+						BackViewer.y = 0;
+						BackViewer.w = SCREEN_WIDTH;
+						BackViewer.h = SCREEN_HEIGHT;
+						SDL_RenderSetViewport(gRenderer, &BackViewer);
+						/////////////////////////Seeder Animation////////////////////////////////
+						//Render texture to screen
+						if (e.type == SDL_KEYDOWN) {
 							//Render current frame
+							gSeederIcon = NULL;
 							SDL_Rect* currentClip = &gSpriteClips[frame / 4];
-							gSpriteSheetTexture.render((SCREEN_WIDTH - currentClip->w) / 2, 
-									(SCREEN_HEIGHT - currentClip->h) / 2, currentClip);
-							//Update screen
-							SDL_RenderPresent(gRenderer);
+							gSpriteSheetTexture.render(206, 120, currentClip);
+							SDL_Rect icon;
 							//go to next frame
 							++frame;
+
 							//cycle animation
 							if (frame / 4 >= WALKING_ANIMATION_FRAMES) {
 								frame = 0;
 							}
+						} else gSeederIcon = loadTexture("SeederIcon2.png");
+						/////////////////////////////Seeder Icon////////////////////////////////////
+						SDL_RenderCopy(gRenderer, gTexture, NULL, NULL);
+						SDL_Rect icon;
+						icon.x = 205;
+						icon.y = 120;
+						icon.w = 135;
+						icon.h = 99;
+						SDL_RenderSetViewport(gRenderer, &icon);
+						SDL_RenderCopy(gRenderer, gSeederIcon, NULL, NULL);
 
-							break;
 
-						
-			
-						}
+						SDL_RenderPresent(gRenderer);
+						//Update the surface
+						SDL_UpdateWindowSurface(gWindow);
+
 					}
-				
 				}
-					//Clear screen
-					SDL_RenderClear(gRenderer);
-					//Render texture to screen
-					SDL_RenderCopy(gRenderer, gTexture, NULL, NULL);
-					//Update screen
-				
-					/////////////////////////////BACKGROUND//////////////////////////////////////////
-
-					
-					
-				
-					
-					///////////////////////////////SEED MAP///////////////////////////////////////////
-					SDL_Rect LeftViewer;
-					LeftViewer.x = 7;
-					LeftViewer.y = 5;
-					LeftViewer.w = 517 ;
-					LeftViewer.h = 387 ;
-					SDL_RenderSetViewport(gRenderer, &LeftViewer);
-
-					//Render texture to screen
-					SDL_RenderCopy(gRenderer, gMapLeft, NULL, NULL);
-					
-					
-
-					///////////////////////////RENDERED SHAPES//////////////////////////////////////
-					//Red rect left
-					/*SDL_Rect fillRectRedLeft = { 221, 135.48, 87.5, 126.04};
-					SDL_SetRenderDrawColor(gRenderer, 0xFF, 0x00, 0x00, 0xFF);
-					SDL_RenderFillRect(gRenderer, &fillRectRedLeft);*/
-					
-					//Draw blue line
-					SDL_SetRenderDrawColor(gRenderer, 0x00, 0x00, 0xFF, 0xFF);
-					SDL_RenderDrawLine(gRenderer, 0,199,524,199);
-					SDL_RenderDrawLine(gRenderer, 265.5, 0, 265.5, 392);
-					
-					//vertical yellow dot line
-					SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
-			
-					SDL_Rect BackViewer;
-					BackViewer.x = 0;
-					BackViewer.y = 0;
-					BackViewer.w = SCREEN_WIDTH;
-					BackViewer.h = SCREEN_HEIGHT;
-					SDL_RenderSetViewport(gRenderer, &BackViewer);
-					//Render texture to screen
-					SDL_RenderCopy(gRenderer, gTexture, NULL, NULL);
-					SDL_Rect icon;
-					icon.x = 220;
-					icon.y = 117;
-					icon.w = 100;
-					icon.h = 100;
-					SDL_RenderSetViewport(gRenderer, &icon);
-					SDL_RenderCopy(gRenderer, gSeederIcon, NULL, NULL);
-					
-					SDL_RenderPresent(gRenderer);
-				//Update the surface
-				SDL_UpdateWindowSurface(gWindow);
-
 			}
+			close();
+			return 0;
+
 		}
-	}
-	close();
-	return 0;
-}
+	
