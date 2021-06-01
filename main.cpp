@@ -6,6 +6,8 @@
 #include <string>
 #include <sstream>
 //TODO create new renderer for each window
+const int MAP_WIDTH = 5000;
+const int MAP_HEIGHT = 5000;
 
 const int SCREEN_WIDTH = 1024;
 const int SCREEN_HEIGHT = 600;
@@ -24,7 +26,10 @@ public:
 	//Moves the dot
 	void move(SDL_Rect& wall);
 	//shows the dot on screen
-	bool render(bool dotRenderFlag);
+	void render(int camX, int camY, bool dotRenderFlag);
+	//position accessors
+	int getPosX();
+	int getPosY();
 	//The X and Y offsets of the dot
 	int mPosX, mPosY;
 	//velocity of the dot
@@ -89,10 +94,6 @@ SDL_Surface* loadSurface(std::string path);
 SDL_Window* gWindow = NULL;
 //The window renderer
 SDL_Renderer* gRendererMain = NULL;
-//Left map renderer
-SDL_Renderer* gRendererLeft = NULL;
-//Right map renderer
-SDL_Renderer* gRendererRight = NULL;
 //Globally used font
 TTF_Font* gFont = NULL;
 //Current displayed texture
@@ -117,6 +118,7 @@ LTexture gSeederIconTexture;
 LTexture gSeederMiniIconTexture;
 LTexture gMapTexture;
 LTexture gDotTexture;
+LTexture gBGTexture;
 LTexture gTimeTextTexture;
 LTexture gPromptTextTexture;
 ///////////////////////////////////////////////END OF GV//////////////////////////////////////////////////////////
@@ -157,7 +159,7 @@ bool LTexture::loadFromFile(std::string path) {
 	return mTexture != NULL;
 }
 
-bool LTexture::loadFromRenderedText(std::string textureText, SDL_Color textColor) {
+/*bool LTexture::loadFromRenderedText(std::string textureText, SDL_Color textColor) {
 	//Get rid of preexisting texture
 	free();
 	//Render text surface
@@ -179,7 +181,9 @@ bool LTexture::loadFromRenderedText(std::string textureText, SDL_Color textColor
 		SDL_FreeSurface(textSurface);
 	}
 	return mTexture != NULL;
-}
+}*/ 
+//text texture load, not used
+
 
 void LTexture::free() {
 	if (mTexture != NULL) {
@@ -262,7 +266,7 @@ void Dot::move(SDL_Rect& wall) {
 	mPosX += mVelX/5;
 	mCollider.x = mPosX;
 	//if the dot went too far to left or right
-	if ((mPosX < 0) || (mPosX + DOT_WIDTH > SCREEN_WIDTH)|| checkCollision(mCollider, wall)) {
+	if ((mPosX < 0) || (mPosX + DOT_WIDTH > MAP_WIDTH)|| checkCollision(mCollider, wall)) {
 		//move back
 		mPosX -= mVelX/5;
 		mCollider.x = mPosX;
@@ -271,7 +275,7 @@ void Dot::move(SDL_Rect& wall) {
 	mPosY += mVelY/5;
 	mCollider.y = mPosY;
 	//if the dot went too far up or down
-	if ((mPosY < 0) || (mPosY + DOT_HEIGHT > SCREEN_HEIGHT)|| checkCollision(mCollider, wall)) {
+	if ((mPosY < 0) || (mPosY + DOT_HEIGHT > MAP_HEIGHT)|| checkCollision(mCollider, wall)) {
 		//Move back
 		mPosY -= mVelY/5;
 		mCollider.y = mPosY;
@@ -313,13 +317,20 @@ bool checkCollision(SDL_Rect a, SDL_Rect b) {
 
 }
 
-bool Dot::render(bool dotRenderFlag) {
-	//Show the dot
+void Dot::render(int camX, int camY, bool dotRenderFlag) {
+	//Show the dot relative to camera
 	if (dotRenderFlag) {
-		gDotTexture.render(mPosX, mPosY);
-
-		return dotRenderFlag;
+		gDotTexture.render(mPosX-1, mPosY-3);
 	}
+	gDotTexture.render(mPosX - camX, mPosY - camY);
+}
+
+int Dot::getPosX() {
+	return mPosX;
+}
+
+int Dot::getPosY() {
+	return mPosY;
 }
 
 
@@ -377,8 +388,8 @@ bool loadMedia() {
 		printf("Failed to load dot texture\n");
 		success = false;
 	}
-	//open the font
-	gFont = TTF_OpenFont("LTYPE.TTF", 18);
+	//open the font - not used
+	/*gFont = TTF_OpenFont("LTYPE.TTF", 18);
 	if (gFont == NULL) {
 		printf("Failed to load lazy font! SDL_ttf Error %s\n", TTF_GetError());
 		success = false;
@@ -392,7 +403,7 @@ bool loadMedia() {
 			printf("Failed to render text texture!\n");
 			success = false;
 		}
-	}
+	}*/
 	//load PNG texture
 	gTexture = loadTexture("NavMainTrans.png");
 	if (gTexture == NULL) {
@@ -558,12 +569,14 @@ int main(int argc, char* args[]) {
 			std::stringstream timeText;
 			//The dot
 			Dot dot;
+			
 			//set the wall
 			SDL_Rect wall;
 			wall.x = 527;
 			wall.y = 5;
 			wall.w = 389;
 			wall.h = 560;
+			SDL_Rect camera = { wall.x, wall.y, wall.w, wall.h};
 			//Current rendered texture
 			LTexture* currentTexture = NULL;
 			int frame = 0;
@@ -668,8 +681,10 @@ int main(int argc, char* args[]) {
 					}
 					else {
 						gSeederIconLeft = loadTexture("SeederIcon2.png");
-						gSeederIconRight = loadTexture("SeederIconMini.png");
-	
+						SDL_RenderSetViewport(gRendererMain, &wall);
+						gMapRight.render(wall.x, wall.y, &camera);
+						dot.render(camera.x, camera.y, !quit);//The one thats need to be up top
+						SDL_RenderSetViewport(gRendererMain, &BackViewer);
 					}
 					
 					/////////////////////////////Seeder Icon left////////////////////////////////////
@@ -682,24 +697,36 @@ int main(int argc, char* args[]) {
 					SDL_RenderSetViewport(gRendererMain, &iconleft);
 					SDL_RenderCopy(gRendererMain, gSeederIconLeft, NULL, NULL);
 					SDL_UpdateWindowSurface(gWindow);
-					SDL_Rect iconRight;
-					iconRight.x = dot.mPosX + RightViewer.x;
-					iconRight.y = dot.mPosY;
-					iconRight.w = 70;
-					iconRight.h = 54;
-					SDL_RenderSetViewport(gRendererMain, &iconRight);
-					SDL_RenderCopy(gRendererMain, gSeederIconRight, NULL, NULL);
 					
-					SDL_UpdateWindowSurface(gWindow);
 					//////////////////////////////////Dot//////////////////////////////////////////////
 					dot.handleEvent(e);
 					dot.move(wall);
+					//Center camera over the dot
+					camera.x = (dot.getPosX() + Dot::DOT_WIDTH / 2) - RightViewer.x;
+					camera.y = (dot.getPosY() + Dot::DOT_HEIGHT / 2) - RightViewer.y;
+
+					//Keep the camera in bonds
+					if (camera.x < 0) {
+						camera.x = 0;
+					}
+					if (camera.y < 0) {
+						camera.y = 0;
+					}
+					if (camera.x > MAP_WIDTH - camera.w) {
+						camera.x = MAP_WIDTH - camera.w;
+					}
+					if (camera.y < MAP_HEIGHT - camera.h) {
+						camera.y = MAP_HEIGHT - camera.h;
+					}
+					
+
+					
 				}
 				//render wall
 				SDL_RenderDrawRect(gRendererMain, &wall);
 				//render dot
 					//DOT
-					dot.render(!quit);
+				
 					SDL_RenderPresent(gRendererMain);
 					//Update the surface
 					//SDL_UpdateWindowSurface(gWindow);
