@@ -1,5 +1,5 @@
 # 2DC-Game
-trying to make a 2d game using SDL libraries
+2d graphical interface using SDL libraries
 Changelog
 
 -- made user input with arrow keys
